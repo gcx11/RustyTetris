@@ -1,3 +1,6 @@
+use enum_length_derive::EnumVariantCount;
+use num_derive::FromPrimitive;
+
 #[derive(PartialEq)]
 #[derive(Copy, Clone)]
 pub enum Direction {
@@ -10,6 +13,7 @@ pub enum Direction {
 pub enum GameState {
     Idle,
     Falling,
+    Deleting,
 }
 
 pub enum MoveResult {
@@ -18,6 +22,8 @@ pub enum MoveResult {
     Freeze,
 }
 
+#[derive(EnumVariantCount)]
+#[derive(FromPrimitive)]
 pub enum Shape {
     Square,
     LOne,
@@ -26,6 +32,12 @@ pub enum Shape {
     LFour,
     ZigOne,
     ZigTwo,
+    ZigThree,
+    ZigFour,
     RowHorizontal,
-    RowVertical
+    RowVertical,
+    TriangleUp,
+    TriangleDown,
+    TriangleLeft,
+    TriangleRight,
 }

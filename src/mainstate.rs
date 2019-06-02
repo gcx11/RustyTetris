@@ -78,7 +78,7 @@ impl MainState {
             }
         }
 
-        self.game_state = GameState::Idle
+        self.game_state = GameState::Deleting;
     }
 
     fn move_piece(&mut self, direction: Direction) {
@@ -110,6 +110,25 @@ impl MainState {
         }
 
         self.game_area = clone;
+    }
+
+    pub fn delete_full_rows(&mut self) {
+        let mut new = [[0; X_SIZE]; Y_SIZE];
+
+        let mut row_number = Y_SIZE - 1;
+
+        for row in (0..Y_SIZE).rev() {
+            if !self.game_area[row].iter().all(|&x| x == 1) {
+                new[row_number] = self.game_area[row].clone();
+
+                if row_number > 0 {
+                    row_number -= 1;
+                }
+            }
+        }
+
+        self.game_area = new;
+        self.game_state = GameState::Idle;
     }
 
     pub fn spawn_new_piece(&mut self) {
@@ -177,6 +196,48 @@ impl MainState {
                 self.game_area[0][1] = 2;
                 self.game_area[1][1] = 2;
                 self.game_area[1][2] = 2;
+            }
+
+            Shape::ZigThree => {
+                self.game_area[0][1] = 2;
+                self.game_area[1][1] = 2;
+                self.game_area[1][0] = 2;
+                self.game_area[2][0] = 2;
+            }
+
+            Shape::ZigFour => {
+                self.game_area[0][0] = 2;
+                self.game_area[0][1] = 2;
+                self.game_area[1][1] = 2;
+                self.game_area[1][2] = 2;
+            }
+
+            Shape::TriangleUp => {
+                self.game_area[0][0] = 2;
+                self.game_area[0][1] = 2;
+                self.game_area[0][2] = 2;
+                self.game_area[1][1] = 2;
+            }
+
+            Shape::TriangleDown => {
+                self.game_area[0][1] = 2;
+                self.game_area[1][0] = 2;
+                self.game_area[1][1] = 2;
+                self.game_area[1][2] = 2;
+            }
+
+            Shape::TriangleLeft => {
+                self.game_area[0][1] = 2;
+                self.game_area[1][0] = 2;
+                self.game_area[1][1] = 2;
+                self.game_area[2][1] = 2;
+            }
+
+            Shape::TriangleRight => {
+                self.game_area[0][0] = 2;
+                self.game_area[1][0] = 2;
+                self.game_area[1][1] = 2;
+                self.game_area[2][0] = 2;
             }
         }
 

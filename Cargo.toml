@@ -7,3 +7,7 @@ edition = "2018"
 [dependencies]
 ggez = "0.5.0-rc.2"
 rand = "0.6.5"
+num = "0.2"
+num-traits = "0.2"
+num-derive = "0.2"
+enum-length-derive = { path = "enum-length-derive" }

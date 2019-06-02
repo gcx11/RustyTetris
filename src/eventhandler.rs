@@ -16,6 +16,10 @@ impl EventHandler for MainState {
                 self.spawn_new_piece();
             }
 
+            GameState::Deleting => {
+                self.delete_full_rows();
+            }
+
             GameState::Falling => {
                 let current = Instant::now();
 
