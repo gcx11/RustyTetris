@@ -1,0 +1,9 @@
+[package]
+name = "RustyTetris"
+version = "0.1.0"
+authors = ["gcx11 <gcx11@seznam.cz>"]
+edition = "2018"
+
+[dependencies]
+ggez = "0.5.0-rc.2"
+rand = "0.6.5"
