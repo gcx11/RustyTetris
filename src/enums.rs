@@ -24,6 +24,7 @@ pub enum MoveResult {
 
 #[derive(EnumVariantCount)]
 #[derive(FromPrimitive)]
+#[derive(Copy, Clone)]
 pub enum Shape {
     Square,
     LOne,

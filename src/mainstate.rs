@@ -1,12 +1,7 @@
 use crate::enums::*;
-use ggez::graphics;
-use ggez::graphics::*;
-use ggez::input::keyboard;
-use ggez::input::keyboard::KeyCode;
-use ggez::{Context, ContextBuilder, GameResult};
-use ggez::event::{self, EventHandler};
-use rand::Rng;
+use ggez::{Context, GameResult};
 use std::time::Instant;
+use std::time::Duration;
 
 const X_SIZE: usize = 10;
 const Y_SIZE: usize = 15;
@@ -15,16 +10,22 @@ pub struct MainState {
     pub game_area: [[u8; X_SIZE]; Y_SIZE],
     pub game_state: GameState,
     pub last_move_gravity: Instant,
-    pub last_move_player: Instant
+    pub last_move_player: Instant,
+    pub next_shape: Shape,
+    pub gravity_speed: Duration,
+    pub score: u64
 }
 
 impl MainState {
     pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
-        let mut s = MainState {
+        let s = MainState {
             game_area: [[0; X_SIZE]; Y_SIZE],
             game_state: GameState::Idle,
             last_move_gravity: Instant::now(),
-            last_move_player: Instant::now()
+            last_move_player: Instant::now(),
+            next_shape: rand::random(),
+            gravity_speed: Duration::from_secs(1),
+            score: 0
         };
 
         Ok(s)
@@ -86,7 +87,7 @@ impl MainState {
 
         for j in 0..Y_SIZE {
             for i in 0..X_SIZE {
-                let (old_i, old_j) = match direction {
+                let (previous_i, previous_j) = match direction {
                     Direction::Up => (i, j + 1),
                     Direction::Down => (i, j.overflowing_sub(1).0),
                     Direction::Left => (i + 1, j),
@@ -95,13 +96,17 @@ impl MainState {
 
                 let old = self.game_area[j][i];
 
-                let new = if (0..X_SIZE).contains(&old_i) && (0..Y_SIZE).contains(&old_j) {
-                    self.game_area[old_j][old_i]
+                let new = if (0..X_SIZE).contains(&previous_i) && (0..Y_SIZE).contains(&previous_j) {
+                    self.game_area[previous_j][previous_i]
                 } else {
                     0
                 };
 
-                if old > 1 && new == 0 || old == 0 && new > 1 {
+                if old == 1 && new == 0 {
+                    clone[j][i] = old
+                } else if new > 1 {
+                    clone[j][i] = new
+                } else if new == 0 && old > 1 {
                     clone[j][i] = new
                 } else if old > 1 && new == 1 {
                     clone[j][i] = 0
@@ -116,6 +121,7 @@ impl MainState {
         let mut new = [[0; X_SIZE]; Y_SIZE];
 
         let mut row_number = Y_SIZE - 1;
+        let mut deleted_rows = 0;
 
         for row in (0..Y_SIZE).rev() {
             if !self.game_area[row].iter().all(|&x| x == 1) {
@@ -124,123 +130,85 @@ impl MainState {
                 if row_number > 0 {
                     row_number -= 1;
                 }
+            } else {
+                deleted_rows += 1;
             }
         }
 
         self.game_area = new;
         self.game_state = GameState::Idle;
+        self.score += 100 * deleted_rows;
     }
 
     pub fn spawn_new_piece(&mut self) {
-        let new_shape: Shape = rand::random();
+        let new_shape = self.next_shape.clone();
+        self.next_shape = rand::random();
 
-        match new_shape {
-            Shape::Square => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[1][1] = 2;
-            }
+        if self.gravity_speed.as_millis() > 200 {
+            self.gravity_speed = self.gravity_speed - Duration::from_millis(10);
+        }
 
-            Shape::LOne => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[0][2] = 2;
-                self.game_area[1][2] = 2;
-            }
+        let parts = new_shape.get_parts();
 
-            Shape::LTwo => {
-                self.game_area[1][0] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][2] = 2;
-                self.game_area[0][2] = 2;
-            }
-
-            Shape::LThree => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[2][1] = 2;
-            }
-
-            Shape::LFour => {
-                self.game_area[0][0] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[0][2] = 2;
-            }
-
-            Shape::RowVertical => {
-                self.game_area[0][0] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[2][0] = 2;
-                self.game_area[3][0] = 2;
-            }
-
-            Shape::RowHorizontal => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[0][2] = 2;
-                self.game_area[0][3] = 2;
-            }
-
-            Shape::ZigOne => {
-                self.game_area[0][1] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[2][0] = 2;
-            }
-
-            Shape::ZigTwo => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][2] = 2;
-            }
-
-            Shape::ZigThree => {
-                self.game_area[0][1] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[2][0] = 2;
-            }
-
-            Shape::ZigFour => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][2] = 2;
-            }
-
-            Shape::TriangleUp => {
-                self.game_area[0][0] = 2;
-                self.game_area[0][1] = 2;
-                self.game_area[0][2] = 2;
-                self.game_area[1][1] = 2;
-            }
-
-            Shape::TriangleDown => {
-                self.game_area[0][1] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[1][2] = 2;
-            }
-
-            Shape::TriangleLeft => {
-                self.game_area[0][1] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[2][1] = 2;
-            }
-
-            Shape::TriangleRight => {
-                self.game_area[0][0] = 2;
-                self.game_area[1][0] = 2;
-                self.game_area[1][1] = 2;
-                self.game_area[2][0] = 2;
-            }
+        for part in parts {
+            self.game_area[part.y][part.x] = part.block_type;
         }
 
         self.game_state = GameState::Falling
+    }
+
+    pub fn rotate(&mut self) {
+        let mut center_x: Option<usize> = None;
+        let mut center_y: Option<usize> = None;
+
+        for j in 0..Y_SIZE {
+            for i in 0..X_SIZE {
+                if self.game_area[j][i] == 3 {
+                    center_x = Some(i);
+                    center_y = Some(j);
+                }
+            }
+        }
+
+        if center_x.is_none() && center_y.is_none() {
+            return
+        }
+
+        let center_x = center_x.unwrap() as i32;
+        let center_y = center_y.unwrap() as i32;
+
+        let mut clone = self.game_area.clone();
+
+        for j in 0..Y_SIZE {
+            for i in 0..X_SIZE {
+                if clone[j][i] == 2 {
+                    clone[j][i] = 0
+                }
+            }
+        }
+
+        for j in 0..Y_SIZE {
+            for i in 0..X_SIZE {
+                if self.game_area[j][i] == 2 {
+                    let inverted_y = Y_SIZE as i32 - j as i32 - 1;
+                    let inverted_center_y = Y_SIZE as i32 - center_y - 1;
+
+                    let new_x = (inverted_y - inverted_center_y) + center_x;
+                    let new_y = Y_SIZE as i32 - (center_x - i as i32) - inverted_center_y - 1;
+
+                    if (0..X_SIZE as i32).contains(&new_x) && (0..Y_SIZE as i32).contains(&new_y) {
+                        if clone[new_y as usize][new_x as usize] == 1 {
+                            return
+                        }
+
+                        clone[new_y as usize][new_x as usize] = 2;
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+
+        self.game_area = clone;
     }
 }

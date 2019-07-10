@@ -3,19 +3,15 @@ mod eventhandler;
 mod mainstate;
 mod shapes;
 
-use ggez::graphics;
-use ggez::graphics::*;
-use ggez::input::keyboard;
-use ggez::input::keyboard::KeyCode;
-use ggez::{Context, ContextBuilder, GameResult};
-use ggez::event::{self, EventHandler};
+use ggez::{ContextBuilder, GameResult};
+use ggez::conf::{WindowSetup, WindowMode};
+use ggez::event;
 use mainstate::MainState;
-use rand::Rng;
-use std::time::Instant;
 
 pub fn main() -> GameResult  {
     let (mut ctx, mut event_loop) = ContextBuilder::new("rusty_tetris", "gcx11")
-        .window_setup(ggez::conf::WindowSetup::default().title("Rusty Tetris"))
+        .window_setup(WindowSetup::default().title("Rusty Tetris"))
+        .window_mode(WindowMode::default().dimensions(350.0, 300.0))
         .build()?;
 
     let mut state = MainState::new(&mut ctx)?;
