@@ -2,16 +2,15 @@ mod enums;
 mod eventhandler;
 mod game;
 mod mainstate;
+mod menu;
+mod scene;
 mod shapes;
 
 use ggez::{ContextBuilder, GameResult};
 use ggez::conf::{WindowSetup, WindowMode};
 use ggez::event;
-use ggez::event::EventHandler;
 use game::Game;
-use mainstate::MainState;
-
-use std::borrow::BorrowMut;
+use crate::menu::Menu;
 
 pub fn main() -> GameResult  {
     let (mut ctx, mut event_loop) = ContextBuilder::new("rusty_tetris", "gcx11")
@@ -19,6 +18,6 @@ pub fn main() -> GameResult  {
         .window_mode(WindowMode::default().dimensions(350.0, 300.0))
         .build()?;
 
-    let mut game = Game { scene: Box::new(MainState::new(&mut ctx)?) };
+    let mut game = Game::new(Box::new(Menu::new(None)));
     event::run(&mut ctx, &mut event_loop, &mut game)
 }

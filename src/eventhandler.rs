@@ -5,14 +5,20 @@ use ggez::graphics::*;
 use ggez::input::keyboard;
 use ggez::input::keyboard::KeyCode;
 use ggez::{Context, GameResult};
-use ggez::event::EventHandler;
 use std::time::Instant;
+use crate::scene::Scene;
+use crate::game::GameContext;
+use crate::menu::Menu;
 
-impl EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+impl Scene for MainState {
+    fn update(&mut self, _ctx: &mut Context, game_context: &mut GameContext) -> GameResult<()> {
         match self.game_state {
             GameState::Idle => {
                 self.spawn_new_piece();
+
+                if self.game_state == GameState::GameOver {
+                    game_context.change_scene(Box::new(Menu::new(Some(self.score))))
+                }
             }
 
             GameState::Deleting => {
@@ -41,12 +47,14 @@ impl EventHandler for MainState {
                     }
                 }
             }
+
+            GameState::GameOver => {}
         }
 
         Ok(())
     }
 
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+    fn draw(&mut self, ctx: &mut Context, game_context: &mut GameContext) -> GameResult<()> {
         graphics::clear(ctx, BLACK);
 
         for (i, row) in self.game_area.iter().enumerate() {

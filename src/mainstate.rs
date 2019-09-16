@@ -1,5 +1,5 @@
 use crate::enums::*;
-use ggez::{Context, GameResult};
+use ggez::GameResult;
 use std::time::Instant;
 use std::time::Duration;
 
@@ -17,7 +17,7 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
+    pub fn new() -> GameResult<MainState> {
         let s = MainState {
             game_area: [[0; X_SIZE]; Y_SIZE],
             game_state: GameState::Idle,
@@ -150,11 +150,14 @@ impl MainState {
 
         let parts = new_shape.get_parts();
 
+        self.game_state = GameState::Falling;
         for part in parts {
+            if self.game_area[part.y][part.x] != 0 {
+                self.game_state = GameState::GameOver;
+            }
+
             self.game_area[part.y][part.x] = part.block_type;
         }
-
-        self.game_state = GameState::Falling
     }
 
     pub fn rotate(&mut self) {

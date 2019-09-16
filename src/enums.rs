@@ -10,10 +10,12 @@ pub enum Direction {
     Right
 }
 
+#[derive(PartialEq)]
 pub enum GameState {
     Idle,
     Falling,
     Deleting,
+    GameOver
 }
 
 pub enum MoveResult {
